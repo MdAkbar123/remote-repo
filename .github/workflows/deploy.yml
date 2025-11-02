@@ -12,20 +12,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
-            cd /home/ubuntu/node-service || git clone https://github.com/${{ github.repository }} node-service
+            set -e
+            cd /home/ubuntu/node-service || git clone git@github.com:${{ github.repository }} node-service
             cd node-service
-            git pull origin main
-            npm install
+            git fetch --all
+            git reset --hard origin/main
+            npm ci --omit=dev
             sudo pkill node || true
-            sudo nohup npm start > app.log 2>&1 &
+            nohup npm start > app.log 2>&1 &
