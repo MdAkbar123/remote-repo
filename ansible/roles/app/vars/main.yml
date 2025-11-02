@@ -1,0 +1,4 @@
+---
+repo_url: "https://github.com/MdAkbar123/remote-repo.git"
+app_dir: "/home/ubuntu/node-service"
+start_command: "npm start"

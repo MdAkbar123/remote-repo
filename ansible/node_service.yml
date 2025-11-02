@@ -1,0 +1,9 @@
+---
+- name: Configure Node.js Web Server
+  hosts: web
+  become: yes
+
+  roles:
+    - { role: common, tags: ["common"] }
+    - { role: nodejs, tags: ["nodejs"] }
+    - { role: app, tags: ["app"] }
