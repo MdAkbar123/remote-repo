@@ -31,6 +31,9 @@ jobs:
             fi
 
             cd node-service
+            echo "🧩 Marking as safe directory for Git..."
+            git config --global --add safe.directory /home/ubuntu/node-service
+
             echo "🔄 Updating repository..."
             git fetch --all
             git reset --hard origin/main
@@ -44,5 +47,3 @@ jobs:
 
             echo "✅ Deployment completed successfully!"
           '
-
-                '
