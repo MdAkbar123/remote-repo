@@ -25,6 +25,13 @@ jobs:
             set -e
             cd /home/ubuntu
 
+            # If directory exists but not a valid Git repo, delete it
+            if [ -d "node-service" ] && [ ! -d "node-service/.git" ]; then
+              echo "⚠️ Found corrupted or non-git directory. Cleaning up..."
+              rm -rf node-service
+            fi
+
+            # Clone repo if not present
             if [ ! -d "node-service" ]; then
               echo "📦 Cloning repository for the first time..."
               git clone git@github.com:${{ github.repository }} node-service
@@ -49,4 +56,3 @@ jobs:
 
             echo "✅ Deployment completed successfully!"
           '
-      
