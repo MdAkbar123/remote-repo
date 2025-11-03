@@ -28,19 +28,22 @@ jobs:
 
             if [ ! -d "node-service" ]; then
               echo "📦 Cloning repository for the first time..."
-              git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} node-service
+              git clone git@github.com:${{ github.repository }} node-service
             fi
 
             cd node-service
-            sudo chown -R ubuntu:ubuntu .
+
+            echo "🧩 Fixing ownership and permissions..."
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/node-service
             git config --global --add safe.directory /home/ubuntu/node-service
 
             echo "🔄 Updating repository..."
             git fetch --all
             git reset --hard origin/main
 
-            echo "📦 Installing dependencies..."
-            npm ci --omit=dev
+            echo "📦 Installing dependencies (in app subdirectory)..."
+            cd app
+            npm install --omit=dev
 
             echo "🚀 Restarting Node.js service..."
             sudo pkill node || true
