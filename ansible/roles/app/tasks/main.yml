@@ -1,37 +1,54 @@
 ---
-
-- name: Ensure app directory exists
-  file:
-    path: "{{ app_dir }}"
-    state: directory
-    owner: ubuntu
-    mode: "0755"
-
-- name: Clone repository
-  git:
-    repo: "{{ repo_url }}"
-    dest: "{{ app_dir }}"
-    version: main
-    force: yes
-
-- name: Install Node.js dependencies
-  npm:
-    path: "{{ app_dir }}/app"
-    production: yes
+- name: Deploy Node.js Application
+  hosts: all
   become: yes
+  vars:
+    app_dir: /home/ubuntu/node-service
+    repo_url: "git@github.com:MdAkbar123/remote-repo.git"
+    start_command: "node server.js"
 
-- name: Stop existing Node.js process (if running)
-  shell: |
-    pkill node || true
-  ignore_errors: yes
+  tasks:
+    - name: Ensure app directory exists
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: ubuntu
+        mode: "0755"
 
-- name: Start Node.js app
-  shell: |
-    cd {{ app_dir }}/app
-    nohup {{ start_command }} > app.log 2>&1 &
-  args:
-    chdir: "{{ app_dir }}/app"
-  async: 30
-  poll: 0
-  become: yes
-  become_user: ubuntu
+    - name: Clone repository into node-service
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+      become_user: ubuntu
+
+    - name: Debug cloned directory
+      command: ls -l {{ app_dir }}/app
+      register: list_output
+      ignore_errors: yes
+
+    - debug:
+        var: list_output.stdout_lines
+
+    - name: Install Node.js dependencies
+      npm:
+        path: "{{ app_dir }}/app"
+        production: yes
+      become: yes
+      become_user: ubuntu
+
+    - name: Stop existing Node.js process (if running)
+      shell: pkill node || true
+      ignore_errors: yes
+
+    - name: Start Node.js app
+      shell: |
+        cd {{ app_dir }}/app
+        nohup {{ start_command }} > app.log 2>&1 &
+      args:
+        chdir: "{{ app_dir }}/app"
+      async: 30
+      poll: 0
+      become: yes
+      become_user: ubuntu
