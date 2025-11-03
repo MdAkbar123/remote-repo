@@ -31,7 +31,9 @@ jobs:
             fi
 
             cd node-service
-            echo "🧩 Marking as safe directory for Git..."
+
+            echo "🧩 Fixing ownership and permissions..."
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/node-service
             git config --global --add safe.directory /home/ubuntu/node-service
 
             echo "🔄 Updating repository..."
@@ -47,3 +49,4 @@ jobs:
 
             echo "✅ Deployment completed successfully!"
           '
+      
