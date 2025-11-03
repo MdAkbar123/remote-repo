@@ -5,7 +5,9 @@
   vars:
     app_dir: /home/ubuntu/node-service
     repo_url: "git@github.com:MdAkbar123/remote-repo.git"
-    start_command: "node server.js"
+    start_command: "/usr/bin/node server.js"
+    service_name: node-service
+    node_port: 3000  # use non-privileged port
 
   tasks:
     - name: Ensure app directory exists
@@ -42,13 +44,39 @@
       shell: pkill node || true
       ignore_errors: yes
 
-    - name: Start Node.js app
-      shell: |
-        cd {{ app_dir }}/app
-        nohup {{ start_command }} > app.log 2>&1 &
-      args:
-        chdir: "{{ app_dir }}/app"
-      async: 30
-      poll: 0
-      become: yes
-      become_user: ubuntu
+    - name: Create systemd service for Node app
+      copy:
+        dest: "/etc/systemd/system/{{ service_name }}.service"
+        content: |
+          [Unit]
+          Description=Node.js Application
+          After=network.target
+
+          [Service]
+          ExecStart={{ start_command }}
+          WorkingDirectory={{ app_dir }}/app
+          Restart=always
+          User=ubuntu
+          Environment=PORT={{ node_port }}
+          StandardOutput=append:/var/log/node-service.log
+          StandardError=append:/var/log/node-service-error.log
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: Restart Node app
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start Node.js app as service
+      systemd:
+        name: "{{ service_name }}"
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: Restart Node app
+      systemd:
+        name: "{{ service_name }}"
+        state: restarted
