@@ -3,4 +3,5 @@
 *.tfstate
 *.tfstate.backup
 plan1
+plan2
 .vscode
